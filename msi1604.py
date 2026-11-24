@@ -174,9 +174,9 @@ def apply_color(path, device_number, sequence):
 
 def add_run_options(command):
     mode = command.add_mutually_exclusive_group()
-    mode.add_argument("--dry-run", action="store_true", help="print the sequence (default)")
-    mode.add_argument("--apply", action="store_true", help="send the reports to the keyboard")
-    command.add_argument("--save", action="store_true", help="include the keyboard save command")
+    mode.add_argument("--dry-run", action="store_true", help="show reports without sending them (default)")
+    mode.add_argument("--apply", action="store_true", help="send reports to the keyboard (may require sudo)")
+    command.add_argument("--save", action="store_true", help="append one save command after all zones (previewed unless --apply is set)")
 
 
 def preset_effects(args):
@@ -209,21 +209,42 @@ def preset_effects(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    executable = "./msi1604.py" if parser.prog == "msi1604.py" else parser.prog
+    parser.epilog = (
+        "Lighting options (color, preset, zones):\n"
+        "  --dry-run  Show reports without sending them. This is the default.\n"
+        "  --apply    Send reports to the keyboard. Use sudo if access is denied.\n"
+        "  --save     Add a save request after all zones. Combine with --apply to send it.\n"
+        "\nExamples:\n"
+        f"  {executable} color FFFFFF --dry-run\n"
+        f"  sudo {executable} preset rainbow --apply\n"
+        f"  sudo {executable} color 4E0923 --apply --save\n"
+        "\nRun a subcommand with --help for its options."
+    )
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("inspect", help="inspect the cached Linux descriptor")
     color = commands.add_parser("color", help="preview or apply a steady RGB color")
     color.add_argument("rgb", type=parse_color, help="six hex digits, for example FFFFFF")
+    color.epilog = f"Example: sudo {executable} color 4E0923 --apply"
     add_run_options(color)
     preset = commands.add_parser("preset", help="preview or apply a lighting preset")
-    preset.add_argument("name", choices=(*EFFECT_MODES, "rainbow"))
+    preset.add_argument("name", choices=(*EFFECT_MODES, "rainbow"),
+                        help="steady/breathing default to white; rainbow is an alias for color-cycle")
     preset.add_argument("colors", type=parse_color, nargs="*", metavar="RGB",
-                        help="optional hex colors in pattern order")
-    preset.add_argument("--speed", choices=("slow", "medium", "fast"))
-    preset.add_argument("--direction", choices=("forward", "reverse"))
+                        help="one color for steady, up to six for animation, none for off")
+    preset.add_argument("--speed", choices=("slow", "medium", "fast"),
+                        help="animation speed (default: medium)")
+    preset.add_argument("--direction", choices=("forward", "reverse"),
+                        help="wave direction (default: forward)")
+    preset.epilog = f"Example: sudo {executable} preset wave FF0000 0000FF --apply"
     add_run_options(preset)
     zones = commands.add_parser("zones", help="set a different steady color for each zone")
-    zones.add_argument("colors", type=parse_color, nargs=4, metavar="RGB")
+    zones.add_argument("colors", type=parse_color, nargs=4, metavar="RGB",
+                       help="four six-digit hex colors in zone order")
+    zones.epilog = f"Example: sudo {executable} zones FF0000 00FF00 0000FF FFFFFF --apply"
     add_run_options(zones)
     args = parser.parse_args()
     try:
