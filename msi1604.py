@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Inspect the MSI MS-1604 or set keyboard colors and effects."""
 import argparse
 from collections import defaultdict

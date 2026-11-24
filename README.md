@@ -28,6 +28,24 @@ sudo python3 msi1604.py color FFFFFF --apply
 
 If Linux reports **Permission denied** for `/dev/hidrawN`, use `sudo` for the apply command as shown. This requires an account allowed to use `sudo`. Inspection and dry runs need no elevated permissions.
 
+## Optional system-wide install
+
+From the repository folder, install the command into `/usr/local/bin`:
+
+```sh
+sudo install -m 755 msi1604.py /usr/local/bin/msi1604-rgb
+```
+
+You can then run it from any directory:
+
+```sh
+msi1604-rgb --help
+msi1604-rgb preset --help
+sudo msi1604-rgb color FFFFFF --apply
+```
+
+Repeat the install command after updating the script to refresh the installed copy.
+
 ## Commands
 
 | Command | What it does |
