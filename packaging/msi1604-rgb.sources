@@ -1,0 +1,5 @@
+Types: deb
+URIs: https://ianbrown050922.github.io/msi1604-rgb/apt/
+Suites: ./
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/msi1604-rgb.asc

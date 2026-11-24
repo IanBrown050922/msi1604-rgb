@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 VERSION OUTPUT_DIRECTORY" >&2
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ] || { [ "$#" -eq 3 ] && [ "$3" != "--setup" ]; }; then
+    echo "Usage: $0 VERSION OUTPUT_DIRECTORY [--setup]" >&2
     exit 2
 fi
 
@@ -21,21 +21,42 @@ stage=$(mktemp -d)
 trap 'rm -rf -- "$stage"' EXIT
 chmod 755 "$stage"
 mkdir -p "$stage/DEBIAN" "$2"
-install -Dm755 "$project_dir/msi1604.py" "$stage/usr/bin/msi1604-rgb"
-install -Dm644 "$project_dir/README.md" "$stage/usr/share/doc/msi1604-rgb/README.md"
+if [ "${3:-}" = "--setup" ]; then
+    name=msi1604-rgb-apt-setup
+    arch=all
+    description='Configure the signed MSI1604 RGB APT repository'
+    details=' Installs the public archive key and the GitHub Pages package source.'
+    install -Dm644 "$project_dir/docs/apt/msi1604-rgb-archive-keyring.asc" \
+        "$stage/etc/apt/keyrings/msi1604-rgb.asc"
+    install -Dm644 "$project_dir/packaging/msi1604-rgb.sources" \
+        "$stage/etc/apt/sources.list.d/msi1604-rgb.sources"
+    cat > "$stage/DEBIAN/conffiles" <<'CONFFILES'
+/etc/apt/keyrings/msi1604-rgb.asc
+/etc/apt/sources.list.d/msi1604-rgb.sources
+CONFFILES
+else
+    name=msi1604-rgb
+    arch=amd64
+    description='Linux keyboard RGB control for the MSI MysticLight MS-1604'
+    details=' Set steady colors and firmware-driven lighting effects on a supported
+ MSI Stealth 16 AI+ keyboard from the command line.'
+    install -Dm755 "$project_dir/msi1604.py" "$stage/usr/bin/msi1604-rgb"
+    install -Dm644 "$project_dir/README.md" "$stage/usr/share/doc/msi1604-rgb/README.md"
+fi
 
 cat > "$stage/DEBIAN/control" <<CONTROL
-Package: msi1604-rgb
+Package: $name
 Version: $version
 Section: utils
 Priority: optional
-Architecture: amd64
+Architecture: $arch
 Maintainer: MSI1604 RGB contributors <IanBrown050922@users.noreply.github.com>
-Depends: python3 (>= 3.9)
 Homepage: https://github.com/IanBrown050922/msi1604-rgb
-Description: Linux keyboard RGB control for the MSI MysticLight MS-1604
- Set steady colors and firmware-driven lighting effects on a supported
- MSI Stealth 16 AI+ keyboard from the command line.
+Description: $description
+$details
 CONTROL
+if [ "$name" = "msi1604-rgb" ]; then
+    sed -i '/^Description:/i Depends: python3 (>= 3.9)' "$stage/DEBIAN/control"
+fi
 
-dpkg-deb --root-owner-group --build "$stage" "$2/msi1604-rgb_${version}_amd64.deb"
+dpkg-deb --root-owner-group --build "$stage" "$2/${name}_${version}_${arch}.deb"

@@ -10,52 +10,44 @@ Set a solid color, choose an animated preset, or give each of the four keyboard 
 
 Solid white and other steady colors have been tested on the B3WF. The animated presets and the save sequence were checked offline. Persistence across a reboot or power loss has yet to be confirmed. The factory startup effect has not been identified.
 
-## Install the Ubuntu package
+## Install on Ubuntu
 
-Download the `amd64.deb` package from the project’s [GitHub releases](https://github.com/IanBrown050922/msi1604-rgb/releases) when available. In the download folder, install it with APT. Replace the filename if you downloaded a different version.
+1. Download the [APT setup package](https://ianbrown050922.github.io/msi1604-rgb/setup/msi1604-rgb-apt-setup_0.1.0_all.deb) from this project’s GitHub Pages site. Save it to your Downloads folder.
+2. Open a terminal and run:
 
-```sh
-sudo apt install ./msi1604-rgb_0.1.0_amd64.deb
-msi1604-rgb --help
-```
+   ```sh
+   cd "$(xdg-user-dir DOWNLOAD)"
+   sudo apt install ./msi1604-rgb-apt-setup_0.1.0_all.deb
+   sudo apt update
+   sudo apt install msi1604-rgb
+   ```
 
-Install a newer `.deb` with the same command to update. A standalone package does not configure an APT source. If you previously installed a manual copy in `/usr/local/bin`, check `command -v msi1604-rgb`. That copy can take precedence over the packaged command in `/usr/bin`.
+The setup package adds the signed APT source and its public key. The key is scoped to this source. Once installed, future utility versions arrive through your normal Ubuntu updates.
 
-## Quick start from source
+To install without adding a source, download the [standalone utility package](https://ianbrown050922.github.io/msi1604-rgb/apt/msi1604-rgb_0.1.0_amd64.deb) and install it from the download folder with `sudo apt install ./msi1604-rgb_0.1.0_amd64.deb`. Update it by installing a newer package.
 
-Download or clone this repository and open a terminal in its folder. No Python packages need to be installed.
-
-```sh
-python3 --version
-python3 msi1604.py inspect
-python3 msi1604.py color FFFFFF --dry-run
-```
-
-The dry run checks the device and prints the reports it would send. To apply white:
+## Quick start
 
 ```sh
-sudo python3 msi1604.py color FFFFFF --apply
-```
-
-If Linux reports **Permission denied** for `/dev/hidrawN`, use `sudo` for the apply command as shown. This requires an account allowed to use `sudo`. Inspection and dry runs need no elevated permissions.
-
-## Optional system-wide install
-
-From the repository folder, install the command into `/usr/local/bin`:
-
-```sh
-sudo install -m 755 msi1604.py /usr/local/bin/msi1604-rgb
-```
-
-You can then run it from any directory:
-
-```sh
-msi1604-rgb --help
-msi1604-rgb preset --help
+msi1604-rgb inspect
+msi1604-rgb color FFFFFF --dry-run
 sudo msi1604-rgb color FFFFFF --apply
 ```
 
-Repeat the install command after updating the script to refresh the installed copy.
+The dry run prints the reports without sending them. Apply may require `sudo` because Linux restricts access to the keyboard’s `/dev/hidrawN` device. Inspection and dry runs work without elevated permissions.
+
+If you previously installed a manual copy, check `command -v msi1604-rgb`. The packaged copy is `/usr/bin/msi1604-rgb`. Move your old `/usr/local/bin/msi1604-rgb` copy aside if it still takes precedence.
+
+To run from a source checkout, use `python3 msi1604.py` in place of `msi1604-rgb` in the examples. The script uses only the Python standard library.
+
+## Uninstall
+
+```sh
+sudo apt remove msi1604-rgb
+sudo apt purge msi1604-rgb-apt-setup
+```
+
+The second command removes the source and key installed by the setup package. Keep the setup package if you want APT to retain access to the archive.
 
 ## Commands
 
@@ -71,9 +63,9 @@ Use six hex digits per color, such as `4E0923`. If you include `#`, quote the va
 All lighting commands default to a dry run. Use `--apply` to send reports. Add `--save` to include the save command once after all four zones. You can combine `--dry-run --save` to preview that sequence.
 
 ```sh
-sudo python3 msi1604.py color 4E0923 --apply
-sudo python3 msi1604.py zones 4E0923 FF0000 00FF00 0000FF --apply
-sudo python3 msi1604.py color FFFFFF --apply --save
+sudo msi1604-rgb color 4E0923 --apply
+sudo msi1604-rgb zones 4E0923 FF0000 00FF00 0000FF --apply
+sudo msi1604-rgb color FFFFFF --apply --save
 ```
 
 To check persistence, reboot after applying with `--save` and observe the keyboard before running the utility again.
@@ -92,11 +84,11 @@ To check persistence, reboot after applying with `--save` and observe the keyboa
 `preset steady 4E0923` builds the same reports as `color 4E0923`. Animated presets accept up to six custom colors in pattern order. Use `--speed slow|medium|fast` for animation speed (default `medium`) and `--direction forward|reverse` for wave direction (default `forward`).
 
 ```sh
-sudo python3 msi1604.py preset breathing 4E0923 --apply
-sudo python3 msi1604.py preset rainbow --apply
-sudo python3 msi1604.py preset color-cycle 4E0923 FFFFFF 0000FF --apply
-sudo python3 msi1604.py preset wave --speed fast --direction reverse --apply
-sudo python3 msi1604.py preset off --apply
+sudo msi1604-rgb preset breathing 4E0923 --apply
+sudo msi1604-rgb preset rainbow --apply
+sudo msi1604-rgb preset color-cycle 4E0923 FFFFFF 0000FF --apply
+sudo msi1604-rgb preset wave --speed fast --direction reverse --apply
+sudo msi1604-rgb preset off --apply
 ```
 
 ## HID reports
@@ -121,31 +113,19 @@ For `4E0923`, both `ff ff ff` triplets become `4e 09 23`. Use a dry run to see t
 
 The protocol was traced in the `LEDKeeper2.exe` service from [MSI Mystic Light 3.0.38.5](https://liveupdate-2.msi.com/autobios/msicenter/Package/Mystic%20Light_3.0.38.5.exe).
 
-
 ## Build and publish packages
 
-From the repository folder on Ubuntu or Debian, build a package with the release version:
+Build a new utility release and sign the archive with the existing release key. Install `apt-utils` and GnuPG on the build machine. Replace the version and fingerprint in these examples.
 
 ```sh
-./packaging/build-deb 0.1.0 dist
+./packaging/build-deb 0.1.1 docs/apt
+./packaging/build-apt-repo docs/apt YOUR_SIGNING_KEY_FINGERPRINT
 ```
 
-Upload the resulting `.deb` as a GitHub release asset. To provide updates through APT, use `apt-utils` and GnuPG to create a signed package index. Use an archive signing key you control and supply its fingerprint:
+Build the setup package when first publishing the archive or when its source configuration or public key changes. Use a new setup package version and update the README download link when replacing it.
 
 ```sh
-./packaging/build-apt-repo dist YOUR_SIGNING_KEY_FINGERPRINT
+./packaging/build-deb 0.1.0 docs/setup --setup
 ```
 
-Publish the contents of `dist` together at a stable HTTPS URL. Keep the signing key private. Tell users the HTTPS URL and the key fingerprint so they can verify the public key and configure the source.
-
-After verifying the key from the hosted archive, users can install it as `/etc/apt/keyrings/msi1604-rgb.asc` and create `/etc/apt/sources.list.d/msi1604-rgb.sources` with the following fields, replacing the example URL:
-
-```text
-Types: deb
-URIs: https://example.org/msi1604-rgb/apt/
-Suites: ./
-Architectures: amd64
-Signed-By: /etc/apt/keyrings/msi1604-rgb.asc
-```
-
-Then `sudo apt update` and `sudo apt install msi1604-rgb` install the utility. Subsequent releases can be installed through normal APT upgrades.
+The setup build uses the archive’s exported public key in `docs/apt/` and the source configuration in `packaging/msi1604-rgb.sources`. GitHub Pages serves `docs/` from `main`. Commit and push the generated files to publish them. Keep the signing key private.
