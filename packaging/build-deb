@@ -1,0 +1,41 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 VERSION OUTPUT_DIRECTORY" >&2
+    exit 2
+fi
+
+version=$1
+case "$version" in
+    [0-9]*) ;;
+    *) echo 'Version must start with a digit.' >&2; exit 2 ;;
+esac
+case "$version" in
+    *[!0-9A-Za-z.+~-]*) echo 'Invalid character in version.' >&2; exit 2 ;;
+esac
+dpkg --validate-version "$version"
+
+project_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+stage=$(mktemp -d)
+trap 'rm -rf -- "$stage"' EXIT
+chmod 755 "$stage"
+mkdir -p "$stage/DEBIAN" "$2"
+install -Dm755 "$project_dir/msi1604.py" "$stage/usr/bin/msi1604-rgb"
+install -Dm644 "$project_dir/README.md" "$stage/usr/share/doc/msi1604-rgb/README.md"
+
+cat > "$stage/DEBIAN/control" <<CONTROL
+Package: msi1604-rgb
+Version: $version
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: MSI1604 RGB contributors <IanBrown050922@users.noreply.github.com>
+Depends: python3 (>= 3.9)
+Homepage: https://github.com/IanBrown050922/msi1604-rgb
+Description: Linux keyboard RGB control for the MSI MysticLight MS-1604
+ Set steady colors and firmware-driven lighting effects on a supported
+ MSI Stealth 16 AI+ keyboard from the command line.
+CONTROL
+
+dpkg-deb --root-owner-group --build "$stage" "$2/msi1604-rgb_${version}_amd64.deb"

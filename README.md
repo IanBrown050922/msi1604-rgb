@@ -10,7 +10,18 @@ Set a solid color, choose an animated preset, or give each of the four keyboard 
 
 Solid white and other steady colors have been tested on the B3WF. The animated presets and the save sequence were checked offline. Persistence across a reboot or power loss has yet to be confirmed. The factory startup effect has not been identified.
 
-## Quick start
+## Install the Ubuntu package
+
+Download the `amd64.deb` package from the project’s [GitHub releases](https://github.com/IanBrown050922/msi1604-rgb/releases) when available. In the download folder, install it with APT. Replace the filename if you downloaded a different version.
+
+```sh
+sudo apt install ./msi1604-rgb_0.1.0_amd64.deb
+msi1604-rgb --help
+```
+
+Install a newer `.deb` with the same command to update. A standalone package does not configure an APT source. If you previously installed a manual copy in `/usr/local/bin`, check `command -v msi1604-rgb`. That copy can take precedence over the packaged command in `/usr/bin`.
+
+## Quick start from source
 
 Download or clone this repository and open a terminal in its folder. No Python packages need to be installed.
 
@@ -109,3 +120,32 @@ For solid white, the effect report starts with the following 18 bytes and ends w
 For `4E0923`, both `ff ff ff` triplets become `4e 09 23`. Use a dry run to see the complete reports for any command.
 
 The protocol was traced in the `LEDKeeper2.exe` service from [MSI Mystic Light 3.0.38.5](https://liveupdate-2.msi.com/autobios/msicenter/Package/Mystic%20Light_3.0.38.5.exe).
+
+
+## Build and publish packages
+
+From the repository folder on Ubuntu or Debian, build a package with the release version:
+
+```sh
+./packaging/build-deb 0.1.0 dist
+```
+
+Upload the resulting `.deb` as a GitHub release asset. To provide updates through APT, use `apt-utils` and GnuPG to create a signed package index. Use an archive signing key you control and supply its fingerprint:
+
+```sh
+./packaging/build-apt-repo dist YOUR_SIGNING_KEY_FINGERPRINT
+```
+
+Publish the contents of `dist` together at a stable HTTPS URL. Keep the signing key private. Tell users the HTTPS URL and the key fingerprint so they can verify the public key and configure the source.
+
+After verifying the key from the hosted archive, users can install it as `/etc/apt/keyrings/msi1604-rgb.asc` and create `/etc/apt/sources.list.d/msi1604-rgb.sources` with the following fields, replacing the example URL:
+
+```text
+Types: deb
+URIs: https://example.org/msi1604-rgb/apt/
+Suites: ./
+Architectures: amd64
+Signed-By: /etc/apt/keyrings/msi1604-rgb.asc
+```
+
+Then `sudo apt update` and `sudo apt install msi1604-rgb` install the utility. Subsequent releases can be installed through normal APT upgrades.

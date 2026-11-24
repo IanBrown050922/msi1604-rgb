@@ -1,0 +1,38 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 PACKAGE_DIRECTORY SIGNING_KEY_FINGERPRINT" >&2
+    exit 2
+fi
+
+cd -- "$1"
+set -- "$2" ./*.deb
+key=$1
+shift
+if [ ! -f "$1" ]; then
+    echo 'Place the release .deb files in the package directory first.' >&2
+    exit 2
+fi
+
+stage=$(mktemp -d)
+trap 'rm -rf -- "$stage"' EXIT
+mkdir "$stage/index"
+for package do
+    ln -s -- "$PWD/${package#./}" "$stage/index/${package#./}"
+done
+(
+    cd -- "$stage/index"
+    apt-ftparchive packages . > Packages
+    gzip -n -c Packages > Packages.gz
+    apt-ftparchive -o APT::FTPArchive::Release::Origin=msi1604-rgb \
+        -o APT::FTPArchive::Release::Architectures=amd64 release . > ../Release
+    gpg --batch --local-user "$key" --clearsign --output ../InRelease ../Release
+    gpg --batch --armor --export "$key" > ../msi1604-rgb-archive-keyring.asc
+)
+for file in Packages Packages.gz; do
+    install -m 644 "$stage/index/$file" "$file"
+done
+for file in Release InRelease msi1604-rgb-archive-keyring.asc; do
+    install -m 644 "$stage/$file" "$file"
+done
