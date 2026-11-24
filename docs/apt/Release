@@ -1,0 +1,15 @@
+Architectures: amd64
+Date: Tue, 24 Nov 2026 18:05:20 +0000
+Origin: msi1604-rgb
+MD5Sum:
+ 8dfb3bd079ec099866205ec86a56182e              796 Packages
+ 3ca242614a2706c084ad114ef210587a              558 Packages.gz
+SHA1:
+ 3d75290f5b2de93cccdbdef3573397c479526b9c              796 Packages
+ 2f01ed757fb4c8f21c79541bb26e4e201e0ec2c2              558 Packages.gz
+SHA256:
+ 73db02369b56a4e9192d52d2c564aed14b347f345c8b8068fe39376a8e007948              796 Packages
+ cd00a5d43a6a278659efe59c426cbfc4c989bedeb0258156eaeb9ad4a7516ae4              558 Packages.gz
+SHA512:
+ af358124ccb18e438dca8bfd35af090f32c0aee053b06d65c278052615f6108ab181c210ca0a6128bbdf10b70e5c3298d750b5856657276d4da70cea7d89bf50              796 Packages
+ da6ccf98000577cc1dce3cd74cb3b639c9bfea49fe8c307b3537507ccefb55a2d3c23d3e2a631eb08eb7503c9bc4448178255c20188d6c24173a5dcefbaf1547              558 Packages.gz

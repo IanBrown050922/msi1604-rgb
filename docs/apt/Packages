@@ -1,0 +1,18 @@
+Package: msi1604-rgb
+Architecture: amd64
+Version: 0.1.0
+Priority: optional
+Section: utils
+Maintainer: MSI1604 RGB contributors <IanBrown050922@users.noreply.github.com>
+Depends: python3 (>= 3.9)
+Filename: ./msi1604-rgb_0.1.0_amd64.deb
+Size: 7800
+MD5sum: 385851f976e66f0a0d883819c2fd1d6e
+SHA1: 229afada1218f8774938174de22ca654416cde54
+SHA256: 72095a5b17c57dfd2c307c2f81980d928bb225241ee22ff515fb6329e93bdd71
+SHA512: 432975ef27f4fd1d1adcf26a4f553b5099d0e87c2b878e4ba6a0290fc5ed3367fe19d38bef15a85f47d598a73223832f35d87f248b06dd4fec685582ef08afa5
+Homepage: https://github.com/IanBrown050922/msi1604-rgb
+Description: Linux keyboard RGB control for the MSI MysticLight MS-1604
+ Set steady colors and firmware-driven lighting effects on a supported
+ MSI Stealth 16 AI+ keyboard from the command line.
+
